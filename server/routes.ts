@@ -170,11 +170,18 @@ export function registerRoutes(app: Express): Server {
         url: url,
         title: article.title,
         content: article.text,
+        html: article.html,
         author: article.author,
         siteName: article.siteName,
+        estimatedDate: article.estimatedDate ? new Date(article.estimatedDate) : null,
         publishedAt: article.date ? new Date(article.date) : null,
         imageUrl: article.images?.[0]?.url,
+        icon: article.icon,
         language: article.humanLanguage,
+        sentiment: article.sentiment?.toString(),
+        tags: article.tags || [],
+        categories: article.categories || [],
+        images: article.images || [],
         rawData: response.data
       });
 
