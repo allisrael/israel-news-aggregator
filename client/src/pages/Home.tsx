@@ -4,6 +4,7 @@ import { ArticleCard } from "@/components/ArticleCard";
 import { SearchBar } from "@/components/SearchBar";
 import { CategoryFilter } from "@/components/CategoryFilter";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { ImportArticleForm } from "@/components/ImportArticleForm";
 import { useLanguage } from "@/lib/LanguageContext";
 
 export function Home() {
@@ -70,6 +71,10 @@ export function Home() {
             selected={category}
             onSelect={setCategory}
           />
+        </div>
+
+        <div className="mb-8">
+          <ImportArticleForm />
         </div>
 
         {isLoading ? (

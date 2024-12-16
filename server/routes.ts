@@ -1,8 +1,9 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { db } from "@db";
-import { articles } from "@db/schema";
+import { articles, diffbotArticles } from "@db/schema";
 import { eq, like, desc, and, or, gte, lte, sql } from "drizzle-orm";
+import axios from "axios";
 
 export function registerRoutes(app: Express): Server {
   // Get articles with filtering
@@ -135,6 +136,52 @@ export function registerRoutes(app: Express): Server {
     } catch (error) {
       console.error('Error importing Times of Israel articles:', error);
       res.status(500).json({ error: "Failed to import articles from Times of Israel" });
+    }
+  });
+
+  // Import article using Diffbot
+  app.post("/api/import/diffbot", async (req, res) => {
+    try {
+      const { url } = req.body;
+      if (!url) {
+        return res.status(400).json({ error: "URL is required" });
+      }
+
+      // Check if article already exists
+      const existing = await db.query.diffbotArticles.findFirst({
+        where: eq(diffbotArticles.url, url)
+      });
+
+      if (existing) {
+        return res.status(409).json({ error: "Article already imported" });
+      }
+
+      // Call Diffbot API
+      const diffbotUrl = `https://api.diffbot.com/v3/article?token=1ff7b2af2897278debfb35a54dba0f94&url=${encodeURIComponent(url)}`;
+      const response = await axios.get(diffbotUrl);
+      const article = response.data.objects[0];
+
+      if (!article) {
+        return res.status(400).json({ error: "Could not extract article content" });
+      }
+
+      // Insert into database
+      await db.insert(diffbotArticles).values({
+        url: url,
+        title: article.title,
+        content: article.text,
+        author: article.author,
+        siteName: article.siteName,
+        publishedAt: article.date ? new Date(article.date) : null,
+        imageUrl: article.images?.[0]?.url,
+        language: article.humanLanguage,
+        rawData: response.data
+      });
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error importing article:', error);
+      res.status(500).json({ error: "Failed to import article" });
     }
   });
 
