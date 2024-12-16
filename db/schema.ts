@@ -1,4 +1,4 @@
-import { pgTable, text, serial, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 
 export const articles = pgTable("articles", {
@@ -15,8 +15,26 @@ export const articles = pgTable("articles", {
   publishedAt: timestamp("published_at").notNull(),
 });
 
+export const diffbotArticles = pgTable("diffbot_articles", {
+  id: serial("id").primaryKey(),
+  url: text("url").notNull().unique(),
+  title: text("title").notNull(),
+  content: text("content").notNull(),
+  author: text("author"),
+  siteName: text("site_name"),
+  publishedAt: timestamp("published_at"),
+  imageUrl: text("image_url"),
+  language: text("language"),
+  rawData: jsonb("raw_data").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export type Article = typeof articles.$inferSelect;
 export type NewArticle = typeof articles.$inferInsert;
+export type DiffbotArticle = typeof diffbotArticles.$inferSelect;
+export type NewDiffbotArticle = typeof diffbotArticles.$inferInsert;
 
 export const insertArticleSchema = createInsertSchema(articles);
 export const selectArticleSchema = createSelectSchema(articles);
+export const insertDiffbotArticleSchema = createInsertSchema(diffbotArticles);
+export const selectDiffbotArticleSchema = createSelectSchema(diffbotArticles);

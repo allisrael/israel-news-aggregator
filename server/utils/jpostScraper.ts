@@ -81,31 +81,18 @@ export async function scrapeLatestJPostArticles(): Promise<JPostArticle[]> {
       attributeNamePrefix: "@_",
       trimValues: true,
       parseTagValue: true,
-      isArray: (name) => ['item', 'Tags', 'RelatedItemID1', 'RelatedItemID2', 'RelatedItemID3'].includes(name),
+      isArray: (name) => ['item'].includes(name),
       textNodeName: "#text",
       removeNSPrefix: true,
       preserveOrder: false,
       ignoreDeclaration: true,
       parseAttributeValue: false,
       cdataPropName: "__cdata",
+      processEntities: true,
+      htmlEntities: true,
       numberParseOptions: {
         hex: false,
         leadingZeros: false
-      },
-      tagValueProcessor: (tagName: string, tagValue: any) => {
-        if (typeof tagValue === 'string') {
-          return tagValue
-            .replace(/&amp;/g, '&')
-            .replace(/&lt;/g, '<')
-            .replace(/&gt;/g, '>')
-            .replace(/&quot;/g, '"')
-            .replace(/&#39;/g, "'")
-            .replace(/&#x27;/g, "'")
-            .replace(/&#x2018;/g, "'")
-            .replace(/&#x2019;/g, "'")
-            .trim();
-        }
-        return tagValue;
       }
     });
 
@@ -132,21 +119,28 @@ export async function scrapeLatestJPostArticles(): Promise<JPostArticle[]> {
         const imgMatch = item.description?.match(/<img[^>]+src="([^">]+)"/);
         const imageUrl = imgMatch ? imgMatch[1] : null;
         
-        // Clean description by removing HTML tags
-        const cleanDescription = item.description?.replace(/<[^>]+>/g, '').trim() || '';
+        // Extract the image URL and clean description
+        const imgMatch = item.description?.match(/<img[^>]+src=['"]([^'"]+)['"]/);
+        const imageUrl = imgMatch ? imgMatch[1] : null;
+        
+        // Clean description: remove img tag first, then other HTML tags
+        const cleanDescription = item.description
+          ?.replace(/<img[^>]+>/g, '') // Remove img tag first
+          .replace(/<[^>]+>/g, '') // Remove remaining HTML tags
+          .replace(/\s+/g, ' ') // Normalize whitespace
+          .trim() || '';
 
-        // Extract category from Tags or use default
-        const category = item.Tags?.split(',')[0]?.trim() || 'News';
-        
-        // Extract category from Tags if available
-        const category = item.Tags?.split(',')[0]?.trim() || 'News';
-        
-        // Create the article with English content as default and Hebrew translation if available
+        // Get category from Tags, defaulting to "News" if not available
+        const category = item.Tags
+          ? (typeof item.Tags === 'string' ? item.Tags.split(',')[0] : item.Tags)?.trim() || 'News'
+          : 'News';
+
+        // Create the article with English content (JPost is primarily in English)
         const article: JPostArticle = {
-          titleHe: item.title?.trim() || '',
+          titleHe: item.title?.trim() || '',  // Store English title in Hebrew field temporarily
           titleEn: item.SocialTitle?.trim() || item.title?.trim() || '',
           url: item.link?.trim() || '',
-          contentHe: item.title?.trim() || '', // Use title as Hebrew content for now
+          contentHe: cleanDescription || '',  // Store English content in Hebrew field temporarily
           contentEn: cleanDescription || '',
           source: 'Jerusalem Post',
           category,
