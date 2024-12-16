@@ -114,6 +114,18 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Import Jerusalem Post articles
+  app.post("/api/import/jpost", async (req, res) => {
+    try {
+      const { importJPostArticles } = await import("./utils/jpostScraper");
+      const count = await importJPostArticles();
+      res.json({ message: `Successfully imported ${count} articles from Jerusalem Post` });
+    } catch (error) {
+      console.error('Error importing Jerusalem Post articles:', error);
+      res.status(500).json({ error: "Failed to import articles from Jerusalem Post" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

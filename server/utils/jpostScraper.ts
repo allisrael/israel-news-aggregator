@@ -5,8 +5,15 @@ import { articles } from '@db/schema';
 import { eq } from 'drizzle-orm';
 
 interface JPostArticle {
-  title: string;
+  titleHe: string;
+  titleEn: string | null;
   url: string;
+  contentHe: string;
+  contentEn: string | null;
+  source: string;
+  category: string;
+  imageUrl: string | null;
+  sourceUrl: string;
   publishedAt: Date;
 }
 
@@ -25,7 +32,11 @@ export async function scrapeLatestJPostArticles(): Promise<JPostArticle[]> {
       removeNSPrefix: true,
       preserveOrder: false,
       ignoreDeclaration: true,
-      parseAttributeValue: false
+      parseAttributeValue: false,
+      numberParseOptions: {
+        hex: false,
+        leadingZeros: false
+      }
     });
     
     const response = await axios.get(rssUrl, {
@@ -53,13 +64,6 @@ export async function scrapeLatestJPostArticles(): Promise<JPostArticle[]> {
     console.log(`RSS Feed Content Length: ${xmlContent.length}`);
     const result = parser.parse(xmlContent);
 
-    // Debug the parsed structure
-    console.log('RSS Feed Structure:', JSON.stringify({
-      hasRss: !!result.rss,
-      hasChannel: !!result.rss?.channel,
-      itemCount: result.rss?.channel?.item?.length || 0
-    }));
-
     if (!result?.rss?.channel?.item) {
       console.error('Invalid RSS feed structure:', result);
       throw new Error('Invalid RSS feed structure - missing channel or items');
@@ -76,28 +80,41 @@ export async function scrapeLatestJPostArticles(): Promise<JPostArticle[]> {
 
     console.log(`Found ${items.length} items in feed`);
     
-    const articles = items.map((item: any) => {
+    const articles = items.map((item: Record<string, any>) => {
       try {
+        // Extract image URL from description HTML if present
+        const imgMatch = item.description?.match(/<img[^>]+src="([^">]+)"/);
+        const imageUrl = imgMatch ? imgMatch[1] : null;
+        
+        // Clean description by removing HTML tags
+        const cleanDescription = item.description?.replace(/<[^>]+>/g, '').trim() || '';
+
+        // Extract category from Tags or use default
+        const category = item.Tags?.split(',')[0]?.trim() || 'News';
+        
         const article: JPostArticle = {
-          title: item.title?.trim() || '',
-          url: item.link?.trim() || '',
-          publishedAt: new Date(item.pubDate)
+          titleHe: item.title?.trim() || '',
+          titleEn: null, // JPost is in English by default
+          url: item.guid?.trim() || item.link?.trim() || '',
+          contentHe: cleanDescription,
+          contentEn: null,
+          source: 'Jerusalem Post',
+          category,
+          imageUrl,
+          sourceUrl: item.link?.trim() || '',
+          publishedAt: new Date(item.pubDate || Date.now())
         };
 
         // Validate required fields
-        if (!article.title || !article.url) {
+        if (!article.titleHe || !article.url || !article.contentHe) {
           console.warn('Skipping invalid article:', { 
-            title: article.title?.substring(0, 50),
-            hasUrl: !!article.url
+            titleHe: article.titleHe?.substring(0, 50),
+            hasUrl: !!article.url,
+            hasContent: !!article.contentHe
           });
           return null;
         }
 
-        console.log('Successfully processed article:', {
-          title: article.title.substring(0, 50) + '...',
-          url: article.url
-        });
-        
         return article;
       } catch (error) {
         console.error('Error processing RSS item:', error);
@@ -107,7 +124,7 @@ export async function scrapeLatestJPostArticles(): Promise<JPostArticle[]> {
 
     // Filter out null articles and take the latest 10 valid ones
     const validArticles = articles
-      .filter((article): article is JPostArticle => article !== null)
+      .filter((article: JPostArticle | null): article is JPostArticle => article !== null)
       .slice(0, 10);
 
     console.log(`Successfully processed ${validArticles.length} valid articles`);
@@ -137,20 +154,27 @@ export async function importJPostArticles() {
         });
 
         if (existing) {
-          console.log(`Skipping duplicate article: ${article.title}`);
+          console.log(`Skipping duplicate article: ${article.titleHe}`);
           continue;
         }
 
         await db.insert(articles).values({
-          title: article.title,
+          titleHe: article.titleHe,
+          titleEn: article.titleEn,
           url: article.url,
+          contentHe: article.contentHe,
+          contentEn: article.contentEn,
+          source: article.source,
+          category: article.category,
+          imageUrl: article.imageUrl,
+          sourceUrl: article.sourceUrl,
           publishedAt: article.publishedAt,
         });
         
         importedCount++;
-        console.log(`Imported article: ${article.title}`);
+        console.log(`Imported article: ${article.titleHe}`);
       } catch (err) {
-        console.error(`Failed to import article "${article.title}":`, err);
+        console.error(`Failed to import article "${article.titleHe}":`, err);
       }
     }
 

@@ -1,4 +1,4 @@
-import { pgTable, text, serial, timestamp, jsonb, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 
 export const articles = pgTable("articles", {
@@ -9,7 +9,7 @@ export const articles = pgTable("articles", {
   contentHe: text("content_he").notNull(),
   contentEn: text("content_en"),
   source: text("source").notNull(),
-  category: text("category"),
+  category: text("category").notNull().default('News'),
   imageUrl: text("image_url"),
   sourceUrl: text("source_url"),
   publishedAt: timestamp("published_at").notNull(),

@@ -27,12 +27,22 @@ export async function scrapeLatestTOIArticles(): Promise<TOIArticle[]> {
       attributeNamePrefix: "@_",
       trimValues: true,
       parseTagValue: true,
-      isArray: (name) => ['item'].includes(name),
+      isArray: (name) => ['item', 'category'].includes(name),
       textNodeName: "#text",
       removeNSPrefix: true,
       preserveOrder: false,
       ignoreDeclaration: true,
-      parseAttributeValue: false
+      parseAttributeValue: false,
+      numberParseOptions: {
+        hex: false,
+        leadingZeros: false
+      },
+      tagValueProcessor: (tagName, tagValue) => {
+        if (typeof tagValue === 'string') {
+          return tagValue.trim();
+        }
+        return tagValue;
+      }
     });
     
     const response = await axios.get(rssUrl, {
@@ -83,7 +93,7 @@ export async function scrapeLatestTOIArticles(): Promise<TOIArticle[]> {
 
     console.log(`Found ${items.length} items in feed`);
     
-    const articles = items.map((item: any) => {
+    const articles = items.map((item: Record<string, any>) => {
       try {
         // Extract image URL from description HTML if present
         const imgMatch = item.description?.match(/<img[^>]+src="([^">]+)"/);
@@ -91,24 +101,27 @@ export async function scrapeLatestTOIArticles(): Promise<TOIArticle[]> {
         
         // Clean description by removing HTML tags
         const cleanDescription = item.description?.replace(/<[^>]+>/g, '').trim() || '';
+        const categories = Array.isArray(item.category) 
+          ? item.category[0]?.trim() 
+          : (item.category?.trim() || 'News');
         
         const article: TOIArticle = {
           titleHe: item.title?.trim() || '',
-          titleEn: null, // TOI RSS feed provides only Hebrew titles
-          url: item.link?.trim() || '',
+          titleEn: null,
+          url: item.guid?.trim() || item.link?.trim() || '',
           contentHe: cleanDescription,
-          contentEn: null, // TOI RSS feed provides only Hebrew content
+          contentEn: null,
           source: 'Times of Israel',
-          category: item.category?.trim() || 'News',
+          category: categories,
           imageUrl: imageUrl,
           sourceUrl: item.link?.trim() || '',
-          publishedAt: new Date(item.pubDate)
+          publishedAt: new Date(item.pubDate || Date.now())
         };
 
         // Validate required fields
         if (!article.titleHe || !article.url || !article.contentHe) {
           console.warn('Skipping invalid article:', { 
-            title: article.titleHe?.substring(0, 50),
+            titleHe: article.titleHe?.substring(0, 50),
             hasUrl: !!article.url,
             hasContent: !!article.contentHe
           });
@@ -131,7 +144,7 @@ export async function scrapeLatestTOIArticles(): Promise<TOIArticle[]> {
 
     // Filter out null articles and take the latest 10 valid ones
     const validArticles = articles
-      .filter((article): article is TOIArticle => article !== null)
+      .filter((article: TOIArticle | null): article is TOIArticle => article !== null)
       .slice(0, 10);
 
     console.log(`Successfully processed ${validArticles.length} valid articles`);
