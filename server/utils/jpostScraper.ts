@@ -3,6 +3,7 @@ import * as cheerio from 'cheerio';
 import { db } from '@db';
 import { articles } from '@db/schema';
 import { eq } from 'drizzle-orm';
+import { XMLParser } from 'fast-xml-parser';
 
 interface JPostArticle {
   titleEn: string;
@@ -15,159 +16,142 @@ interface JPostArticle {
 
 export async function scrapeLatestJPostArticles(): Promise<JPostArticle[]> {
   try {
-    const baseUrl = 'https://www.jpost.com';
-    console.log('Fetching articles from JPost...');
-    
-    const urls = [
-      `${baseUrl}/israel-news`,
-      `${baseUrl}/breaking-news`,
-      baseUrl
-    ];
-    
-    let response;
-    for (const url of urls) {
-      try {
-        console.log(`Attempting to fetch from ${url}...`);
-        response = await axios.get(url, {
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-            'Accept-Language': 'en-US,en;q=0.9',
-            'Connection': 'keep-alive',
-            'Cache-Control': 'no-cache',
-            'Pragma': 'no-cache'
-          },
-          timeout: 30000,
-          maxRedirects: 5
-        });
+        console.log('Fetching articles from JPost RSS feed...');
         
-        if (response.status === 200) {
-          console.log(`Successfully fetched ${url}`);
-          break;
-        }
-      } catch (error) {
-        console.error(`Failed to fetch ${url}:`, error.message);
-        if (url === urls[urls.length - 1]) {
-          throw error;
-        }
-      }
-    }
-
-    if (!response || response.status !== 200) {
-      throw new Error('Failed to fetch any JPost URL');
-    }
-
-    if (response.status !== 200) {
-      throw new Error(`Failed to fetch JPost: HTTP ${response.status}`);
-    }
-
-    console.log('Successfully fetched JPost page');
-    const $ = cheerio.load(response.data);
-    const articles: JPostArticle[] = [];
-
-    // Modern selectors for JPost articles
-    const articleSelectors = [
-      '.article-grid-container > div',
-      '.c-articleGridGroup article',
-      '.c-articleGrid article',
-      '.c-topStories article',
-      '.c-articleCard',
-      '.breaking-news .article',
-      '[data-qa="article-card"]',
-      '[data-testid="article-item"]'
-    ];
-
-    for (const selector of articleSelectors) {
-      console.log(`Trying selector: ${selector}`);
-      const elements = $(selector);
-      console.log(`Found ${elements.length} elements with selector ${selector}`);
-
-      elements.slice(0, 6).each((_, element) => {
-        const articleEl = $(element);
-
-        // Try multiple selectors for title
-        const titleSelectors = ['h1', 'h2', 'h3', '.title', '.article-title', '[data-title]'];
-        const titleEl = titleSelectors
-          .map(sel => articleEl.find(sel).first())
-          .find(el => el.length > 0 && el.text().trim());
-
-        // Try multiple selectors for link with improved URL handling
-        const linkSelectors = [
-          'a[href*="/article/"]', 
-          'a[href*="/israel-news/"]',
-          'a[href*="/middle-east/"]',
-          'a[href*="/breaking-news/"]',
-          'a[href]:not([href="#"])'
+        const rssUrls = [
+          'https://www.jpost.com/Rss/RssFeedsHeadlines.aspx',
+          'https://www.jpost.com/Rss/RssFeedsIsraelNews.aspx',
+          'https://www.jpost.com/Rss/RssFeedsMiddleEastNews.aspx',
+          'https://www.jpost.com/Rss/RssFeedsFrontPage.aspx'
         ];
+    
+    const parser = new XMLParser({
+      ignoreAttributes: false,
+      attributeNamePrefix: "@_",
+      parseAttributeValue: true,
+      trimValues: true,
+      parseTagValue: true,
+      isArray: (name) => ['item', 'category'].indexOf(name) !== -1,
+      textNodeName: "_text",
+      ignoreNameSpace: true,
+      removeNSPrefix: true
+    });
+    
+    let allArticles: JPostArticle[] = [];
+    
+    for (const rssUrl of rssUrls) {
+      try {
+        console.log(`Fetching RSS feed: ${rssUrl}`);
+        const response = await axios.get(rssUrl, {
+          timeout: 30000,
+          maxRedirects: 5,
+          decompress: true,
+          responseType: 'text',
+          validateStatus: (status) => status >= 200 && status < 300,
+          headers: {
+            'Accept': 'application/rss+xml, application/xml, application/atom+xml, text/xml; q=0.9, */*; q=0.8',
+            'User-Agent': 'Mozilla/5.0 (compatible; IsraeliNewsAggregator/1.0; +https://replit.com)',
+            'Accept-Language': 'en-US,en;q=0.9,he;q=0.8',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache',
+            'Connection': 'keep-alive'
+          }
+        });
+
+        if (response.status !== 200) {
+          console.error(`Failed to fetch RSS feed ${rssUrl}: HTTP ${response.status}`);
+          continue;
+        }
+
+        const xmlContent = response.data;
+        console.log(`RSS Feed Content Length: ${xmlContent.length}`);
+        console.log(`RSS Feed Content Sample: ${xmlContent.substring(0, 200)}`);
+
+        if (!xmlContent.includes('<rss') && !xmlContent.includes('<feed')) {
+          console.error(`Invalid feed format from ${rssUrl}`);
+          continue;
+        }
+
+        const result = parser.parse(xmlContent);
+        console.log('Parsed RSS structure:', JSON.stringify(result, null, 2).substring(0, 500));
         
-        let sourceUrl = '';
-        for (const selector of linkSelectors) {
-          const linkEl = articleEl.find(selector).first();
-          if (linkEl.length > 0) {
-            const href = linkEl.attr('href');
-            if (href) {
-              sourceUrl = href.startsWith('http') ? href : `${baseUrl}${href.startsWith('/') ? '' : '/'}${href}`;
-              break;
+        if (!result?.rss?.channel) {
+          console.error(`Invalid RSS feed structure from ${rssUrl}`);
+          continue;
+        }
+
+        const channel = result.rss.channel;
+        console.log(`Channel Title: ${channel.title?._text || channel.title}`);
+        console.log(`Channel Description: ${channel.description?._text || channel.description}`);
+        
+        const items = Array.isArray(channel.item) ? channel.item : (channel.item ? [channel.item] : []);
+        console.log(`Found ${items.length} items in feed ${rssUrl}`);
+
+        const feedArticles = items.map((item: any) => {
+          // Extract title and content
+          const title = item.title?._text || item.title;
+          const description = item.description?._text || item.description;
+          
+          // Extract image URL from media:content, media:thumbnail, or enclosure
+          let imageUrl = null;
+          if (item['media:content']) {
+            imageUrl = item['media:content']['@_url'];
+          } else if (item['media:thumbnail']) {
+            imageUrl = item['media:thumbnail']['@_url'];
+          } else if (item.enclosure) {
+            const type = item.enclosure['@_type'];
+            if (type && type.startsWith('image/')) {
+              imageUrl = item.enclosure['@_url'];
             }
           }
-        }
 
-        // Try multiple selectors for image
-        const imageSelectors = ['img[src*="images"]', 'img[data-src*="images"]', 'img[data-lazy-src]', '.article-image img'];
-        const imageEl = imageSelectors
-          .map(sel => articleEl.find(sel).first())
-          .find(el => el.length > 0);
+          // Extract category
+          let category = 'News';
+          if (item.category) {
+            if (Array.isArray(item.category)) {
+              category = item.category[0]?._text || item.category[0];
+            } else {
+              category = item.category._text || item.category;
+            }
+          } else if (rssUrl.includes('defense')) {
+            category = 'Defense';
+          } else if (rssUrl.includes('israelnews')) {
+            category = 'Israel News';
+          }
 
-        // Try multiple selectors for excerpt
-        const excerptSelectors = ['.excerpt', '.description', 'p:not(:empty)', '.article-content'];
-        const excerpt = excerptSelectors
-          .map(sel => articleEl.find(sel).first())
-          .find(el => el.length > 0 && el.text().trim());
+          // Extract link
+          const link = item.link?._text || item.link;
+          console.log(`Processed article: ${title} - ${link}`);
 
-        if (!titleEl || !sourceUrl) {
-          console.log('Skipping article due to missing data:', {
-            hasTitle: !!titleEl,
-            title: titleEl?.text().trim(),
-            hasUrl: !!sourceUrl,
-            url: sourceUrl
-          });
-          return;
-        }
-
-        const title = titleEl.text().trim();
-        const content = excerpt?.text().trim() || '';
-
-        // Only process articles with meaningful content
-        if (title && sourceUrl && content.length > 20) {
-          const article: JPostArticle = {
+          return {
             titleEn: title,
-            contentEn: content || 'Read full article on The Jerusalem Post website',
+            contentEn: description || 'Read full article on The Jerusalem Post website',
             source: 'The Jerusalem Post',
-            category: articleEl.find('.category, .article-category, .section-title').text().trim() || 'News',
-            imageUrl: imageEl?.attr('src') || imageEl?.attr('data-src') || imageEl?.attr('data-lazy-src') || null,
-            sourceUrl,
+            category,
+            imageUrl,
+            sourceUrl: link,
           };
+        });
 
-          // Log the successfully scraped article
-          console.log('Successfully scraped article:', {
-            title: article.titleEn,
-            url: article.sourceUrl,
-            contentLength: article.contentEn.length,
-            hasImage: !!article.imageUrl
-          });
-          
-          articles.push(article);
-        }
-      });
-
-      // If we found any articles with this selector, stop trying other selectors
-      if (articles.length > 0) {
-        break;
+        allArticles = [...allArticles, ...feedArticles];
+        
+        // Log success for this feed
+        console.log(`Successfully parsed ${feedArticles.length} articles from ${rssUrl}`);
+      } catch (error) {
+        console.error(`Error fetching RSS feed ${rssUrl}:`, error);
+        // Continue with other feeds even if one fails
+        continue;
       }
     }
 
-    console.log(`Successfully scraped ${articles.length} articles from JPost`);
-    return articles;
+    // Take only the latest 6 articles
+    allArticles = allArticles
+      .filter(article => article.titleEn && article.sourceUrl)
+      .slice(0, 6);
+
+    console.log(`Final article count: ${allArticles.length}`);
+    return allArticles;
   } catch (error) {
     console.error('Error scraping JPost:', error);
     throw error;
