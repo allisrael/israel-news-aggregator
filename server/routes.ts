@@ -45,6 +45,23 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Get single article by ID
+  app.get("/api/articles/:id", async (req, res) => {
+    try {
+      const article = await db.query.articles.findFirst({
+        where: eq(articles.id, Number(req.params.id)),
+      });
+      
+      if (!article) {
+        return res.status(404).json({ error: "Article not found" });
+      }
+      
+      res.json(article);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch article" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
