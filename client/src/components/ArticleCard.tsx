@@ -55,18 +55,18 @@ export function ArticleCard({ article }: ArticleCardProps) {
         </CardHeader>
         <CardContent className="flex-1">
           <div 
-            className={`prose max-w-none ${isHebrew ? "text-right" : "text-left"}`}
+            className={`${isHebrew ? "text-right" : "text-left"}`}
             dir={isHebrew ? "rtl" : "ltr"}
           >
-            {content.split('\n').slice(0, 3).map((paragraph, i) => (
-              <p key={i} className="mb-2 text-gray-600">
-                {paragraph}
-              </p>
-            ))}
+            <div className="space-y-2 text-gray-600">
+              {content.split('\n').slice(0, 3).map((paragraph, i) => (
+                <div key={i}>{paragraph}</div>
+              ))}
+            </div>
             {content.split('\n').length > 3 && (
-              <p className="text-primary font-medium mt-4">
+              <div className="text-primary font-medium mt-4">
                 {isHebrew ? 'קרא עוד...' : 'Read more...'}
-              </p>
+              </div>
             )}
           </div>
         </CardContent>

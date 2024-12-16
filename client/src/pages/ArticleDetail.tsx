@@ -85,12 +85,39 @@ export function ArticleDetail() {
         </CardHeader>
         <CardContent>
           <div 
-            className={`prose max-w-none ${isHebrew ? "text-right" : "text-left"}`}
+            className={`${isHebrew ? "text-right" : "text-left"} space-y-6`}
             dir={isHebrew ? "rtl" : "ltr"}
           >
             {content.split('\n').map((paragraph, i) => (
-              <p key={i}>{paragraph}</p>
+              <div key={i} className="text-lg leading-relaxed text-gray-700">
+                {paragraph}
+              </div>
             ))}
+          </div>
+          <div className="mt-8 pt-8 border-t">
+            <div className="flex flex-wrap gap-4 text-sm text-gray-500">
+              <div>
+                <span className="font-semibold mr-2">Source:</span>
+                {article.source}
+              </div>
+              <div>
+                <span className="font-semibold mr-2">Category:</span>
+                {article.category}
+              </div>
+              <div>
+                <span className="font-semibold mr-2">Published:</span>
+                {new Date(article.publishedAt).toLocaleDateString(
+                  isHebrew ? 'he-IL' : 'en-US',
+                  { 
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  }
+                )}
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
