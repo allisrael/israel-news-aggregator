@@ -2,33 +2,73 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { db } from "@db";
 import { articles } from "@db/schema";
-import { eq, like, desc, and } from "drizzle-orm";
+import { eq, like, desc, and, or, gte, lte, sql } from "drizzle-orm";
 
 export function registerRoutes(app: Express): Server {
   // Get articles with filtering
   app.get("/api/articles", async (req, res) => {
     try {
-      const { category, search, page = 1, limit = 10 } = req.query;
-      const offset = (Number(page) - 1) * Number(limit);
+      const { 
+        category, 
+        search, 
+        page = 1, 
+        limit = 10,
+        fromDate,
+        toDate
+      } = req.query;
       
-      let query = db.select().from(articles).orderBy(desc(articles.publishedAt));
+      const offset = (Number(page) - 1) * Number(limit);
+      let conditions = [];
       
       if (category) {
-        query = query.where(eq(articles.category, String(category)));
+        conditions.push(eq(articles.category, String(category)));
       }
       
       if (search) {
-        query = query.where(
-          and(
+        conditions.push(
+          or(
             like(articles.titleHe, `%${search}%`),
-            like(articles.titleEn, `%${search}%`)
+            like(articles.titleEn, `%${search}%`),
+            like(articles.contentHe, `%${search}%`),
+            like(articles.contentEn, `%${search}%`)
           )
         );
       }
+
+      if (fromDate) {
+        conditions.push(gte(articles.publishedAt, new Date(String(fromDate))));
+      }
+
+      if (toDate) {
+        conditions.push(lte(articles.publishedAt, new Date(String(toDate))));
+      }
+
+      const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
       
-      const results = await query.limit(Number(limit)).offset(offset);
-      res.json(results);
+      const [results, totalCount] = await Promise.all([
+        db.select()
+          .from(articles)
+          .where(whereClause)
+          .orderBy(desc(articles.publishedAt))
+          .limit(Number(limit))
+          .offset(offset),
+        db.select({ count: sql`count(*)::int` })
+          .from(articles)
+          .where(whereClause)
+          .then(result => result[0].count)
+      ]);
+
+      res.json({
+        articles: results,
+        pagination: {
+          total: totalCount,
+          page: Number(page),
+          limit: Number(limit),
+          totalPages: Math.ceil(totalCount / Number(limit))
+        }
+      });
     } catch (error) {
+      console.error('Error fetching articles:', error);
       res.status(500).json({ error: "Failed to fetch articles" });
     }
   });
