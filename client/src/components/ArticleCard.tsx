@@ -45,7 +45,15 @@ export function ArticleCard({ article }: ArticleCardProps) {
             className={isHebrew ? "text-right" : "text-left"}
             dir={isHebrew ? "rtl" : "ltr"}
           >
-            {content.slice(0, 150)}...
+            {/* Show first 3 paragraphs of content */}
+            {content.split('\n').slice(0, 3).map((paragraph, i) => (
+              <p key={i} className="mb-2">
+                {paragraph}
+              </p>
+            ))}
+            {content.split('\n').length > 3 && (
+              <p className="text-primary font-medium">Read more...</p>
+            )}
           </p>
         </CardContent>
       </Card>
