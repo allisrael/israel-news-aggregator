@@ -165,11 +165,14 @@ export function registerRoutes(app: Express): Server {
       // Call Diffbot API
       const diffbotUrl = `https://api.diffbot.com/v3/article?token=${diffbotApiKey}&url=${encodeURIComponent(url)}`;
       const response = await axios.get(diffbotUrl);
-      const article = response.data.objects[0];
-
-      if (!article) {
+      console.log('Diffbot API Response:', JSON.stringify(response.data, null, 2));
+      
+      if (!response.data || !response.data.objects || !response.data.objects[0]) {
+        console.error('Invalid Diffbot response structure:', response.data);
         return res.status(400).json({ error: "Could not extract article content" });
       }
+      
+      const article = response.data.objects[0];
 
       // Insert into database
       await db.insert(diffbotArticles).values({
