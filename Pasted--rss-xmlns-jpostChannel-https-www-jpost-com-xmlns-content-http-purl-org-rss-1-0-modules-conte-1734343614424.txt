@@ -1,0 +1,45 @@
+<rss xmlns:jpostChannel="https://www.jpost.com" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:media="http://search.yahoo.com/mrss/" version="2.0">
+<channel>
+<title>JPost.com - Homepage</title>
+<channelName>Homepage</channelName>
+<link>https://www.jpost.com</link>
+<description>www.jpost.com</description>
+<copyright>© 1995 - 2024 The Jerusalem Post. All rights reserved.</copyright>
+<generator>RSSFeeds</generator>
+<item>
+<title>Senior Hamas official: 'We're closer than ever to reaching a deal'</title>
+<link>https://www.jpost.com/middle-east/article-833607</link>
+<description> <img align='right' src='https://images.jpost.com/image/upload/q_auto/c_fill,g_faces:center,h_537,w_822/639371' /><br />"We are closer than ever to reaching a prisoner exchange deal and a ceasefire, provided that Netanyahu does not obstruct the agreement," the official said.<br /> </description>
+<Photographer>IDF SPOKESPERSON'S UNIT, REUTERS/IBRAHEEM ABU MUSTAFA</Photographer>
+<pubDate>Mon, 16 Dec 2024 06:23:37 GMT</pubDate>
+<itemID>833607</itemID>
+<isPremium>N</isPremium>
+<isVideo>False</isVideo>
+<RelatedItemID1/>
+<RelatedItemID2/>
+<RelatedItemID3/>
+<Author>BY SAM HALPERN AND RAQUEL GUERTZENSTEIN FROHLICH</Author>
+<Sponsored>False</Sponsored>
+<Tags>Hamas,IDF,Gaza Strip,Donald Trump,Hostage Deal,Philadelphi Corridor</Tags>
+<CategoryID>12</CategoryID>
+<SocialTitle>Hamas: Ceasefire-hostage deal within reach if Netanyahu doesn’t block it</SocialTitle>
+</item>
+<item>
+<title>The Houthis are the ‘last man standing’ in Iran’s regional war</title>
+<link>https://www.jpost.com/middle-east/article-833654</link>
+<description> <img align='right' src='https://images.jpost.com/image/upload/q_auto/c_fill,g_faces:center,h_537,w_822/638842' /><br />The Houthis have not suffered a major setback since they began their attacks on Israel and on shipping in the aftermath of the Hamas October 7, 2023 attack.<br /> </description>
+<Photographer>REUTERS/KHALED ABDULLAH</Photographer>
+<pubDate>Mon, 16 Dec 2024 09:30:27 GMT</pubDate>
+<itemID>833654</itemID>
+<isPremium>N</isPremium>
+<isVideo>False</isVideo>
+<RelatedItemID1/>
+<RelatedItemID2/>
+<RelatedItemID3/>
+<Author>BY SETH J. FRANTZMAN</Author>
+<Sponsored>False</Sponsored>
+<Tags>Israel,Hamas,Iran,Houthi,Middle East</Tags>
+<CategoryID>12</CategoryID>
+<SocialTitle>Houthis increasingly appear to be alone in efforts to attack Israel</SocialTitle>
+</item>
+<item>

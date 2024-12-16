@@ -16,14 +16,8 @@ interface JPostArticle {
 
 export async function scrapeLatestJPostArticles(): Promise<JPostArticle[]> {
   try {
-        console.log('Fetching articles from JPost RSS feed...');
-        
-        const rssUrls = [
-          'https://www.jpost.com/Rss/RssFeedsHeadlines.aspx',
-          'https://www.jpost.com/Rss/RssFeedsIsraelNews.aspx',
-          'https://www.jpost.com/Rss/RssFeedsMiddleEastNews.aspx',
-          'https://www.jpost.com/Rss/RssFeedsFrontPage.aspx'
-        ];
+    console.log('Fetching articles from JPost RSS feed...');
+    const rssUrl = 'https://rss.jpost.com/rss/rssfeedsfrontpage.aspx';
     
     const parser = new XMLParser({
       ignoreAttributes: false,
@@ -31,129 +25,121 @@ export async function scrapeLatestJPostArticles(): Promise<JPostArticle[]> {
       parseAttributeValue: true,
       trimValues: true,
       parseTagValue: true,
-      isArray: (name) => ['item', 'category'].indexOf(name) !== -1,
-      textNodeName: "_text",
-      ignoreNameSpace: true,
-      removeNSPrefix: true
+      isArray: (name) => ['item'].includes(name),
+      textNodeName: "#text",
+      removeNSPrefix: true,
+      preserveOrder: false,
+      ignoreDeclaration: true,
+      parseAttributeValue: false,
+      cdataPropName: "#cdata"
     });
     
-    let allArticles: JPostArticle[] = [];
-    
-    for (const rssUrl of rssUrls) {
-      try {
-        console.log(`Fetching RSS feed: ${rssUrl}`);
-        const response = await axios.get(rssUrl, {
-          timeout: 30000,
-          maxRedirects: 5,
-          decompress: true,
-          responseType: 'text',
-          validateStatus: (status) => status >= 200 && status < 300,
-          headers: {
-            'Accept': 'application/rss+xml, application/xml, application/atom+xml, text/xml; q=0.9, */*; q=0.8',
-            'User-Agent': 'Mozilla/5.0 (compatible; IsraeliNewsAggregator/1.0; +https://replit.com)',
-            'Accept-Language': 'en-US,en;q=0.9,he;q=0.8',
-            'Accept-Encoding': 'gzip, deflate, br',
-            'Cache-Control': 'no-cache',
-            'Pragma': 'no-cache',
-            'Connection': 'keep-alive'
-          }
-        });
-
-        if (response.status !== 200) {
-          console.error(`Failed to fetch RSS feed ${rssUrl}: HTTP ${response.status}`);
-          continue;
-        }
-
-        const xmlContent = response.data;
-        console.log(`RSS Feed Content Length: ${xmlContent.length}`);
-        console.log(`RSS Feed Content Sample: ${xmlContent.substring(0, 200)}`);
-
-        if (!xmlContent.includes('<rss') && !xmlContent.includes('<feed')) {
-          console.error(`Invalid feed format from ${rssUrl}`);
-          continue;
-        }
-
-        const result = parser.parse(xmlContent);
-        console.log('Parsed RSS structure:', JSON.stringify(result, null, 2).substring(0, 500));
-        
-        if (!result?.rss?.channel) {
-          console.error(`Invalid RSS feed structure from ${rssUrl}`);
-          continue;
-        }
-
-        const channel = result.rss.channel;
-        console.log(`Channel Title: ${channel.title?._text || channel.title}`);
-        console.log(`Channel Description: ${channel.description?._text || channel.description}`);
-        
-        const items = Array.isArray(channel.item) ? channel.item : (channel.item ? [channel.item] : []);
-        console.log(`Found ${items.length} items in feed ${rssUrl}`);
-
-        const feedArticles = items.map((item: any) => {
-          // Extract title and content
-          const title = item.title?._text || item.title;
-          const description = item.description?._text || item.description;
-          
-          // Extract image URL from media:content, media:thumbnail, or enclosure
-          let imageUrl = null;
-          if (item['media:content']) {
-            imageUrl = item['media:content']['@_url'];
-          } else if (item['media:thumbnail']) {
-            imageUrl = item['media:thumbnail']['@_url'];
-          } else if (item.enclosure) {
-            const type = item.enclosure['@_type'];
-            if (type && type.startsWith('image/')) {
-              imageUrl = item.enclosure['@_url'];
-            }
-          }
-
-          // Extract category
-          let category = 'News';
-          if (item.category) {
-            if (Array.isArray(item.category)) {
-              category = item.category[0]?._text || item.category[0];
-            } else {
-              category = item.category._text || item.category;
-            }
-          } else if (rssUrl.includes('defense')) {
-            category = 'Defense';
-          } else if (rssUrl.includes('israelnews')) {
-            category = 'Israel News';
-          }
-
-          // Extract link
-          const link = item.link?._text || item.link;
-          console.log(`Processed article: ${title} - ${link}`);
-
-          return {
-            titleEn: title,
-            contentEn: description || 'Read full article on The Jerusalem Post website',
-            source: 'The Jerusalem Post',
-            category,
-            imageUrl,
-            sourceUrl: link,
-          };
-        });
-
-        allArticles = [...allArticles, ...feedArticles];
-        
-        // Log success for this feed
-        console.log(`Successfully parsed ${feedArticles.length} articles from ${rssUrl}`);
-      } catch (error) {
-        console.error(`Error fetching RSS feed ${rssUrl}:`, error);
-        // Continue with other feeds even if one fails
-        continue;
+    const response = await axios.get(rssUrl, {
+      timeout: 30000,
+      maxRedirects: 5,
+      responseType: 'text',
+      validateStatus: null,
+      headers: {
+        'Accept': 'application/rss+xml, application/xml, text/xml',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
       }
+    });
+
+    if (response.status !== 200) {
+      console.error('Failed to fetch RSS feed:', response.status, response.statusText);
+      throw new Error(`Failed to fetch RSS feed: HTTP ${response.status}`);
     }
 
-    // Take only the latest 6 articles
-    allArticles = allArticles
-      .filter(article => article.titleEn && article.sourceUrl)
+    const xmlContent = response.data;
+    if (typeof xmlContent !== 'string' || xmlContent.length === 0) {
+      console.error('Invalid RSS feed response: Empty content');
+      throw new Error('Invalid RSS feed response: Empty content');
+    }
+
+    console.log(`RSS Feed Content Length: ${xmlContent.length}`);
+    console.log('First 200 characters:', xmlContent.substring(0, 200));
+
+    const result = parser.parse(xmlContent);
+    console.log('Parsed RSS feed structure:', JSON.stringify(result, null, 2).substring(0, 1000));
+
+    if (!result?.rss?.channel?.item) {
+      console.error('Invalid RSS feed structure:', result);
+      throw new Error('Invalid RSS feed structure - missing channel or items');
+    }
+
+    const items = Array.isArray(result.rss.channel.item) 
+      ? result.rss.channel.item 
+      : [result.rss.channel.item];
+
+    if (!items.length) {
+      console.error('No items found in feed');
+      throw new Error('No items found in RSS feed');
+    }
+
+    console.log(`Found ${items.length} items in feed`);
+    
+    const articles = items.map((item: any) => {
+      try {
+        // Extract the image URL from the description HTML
+        const $ = cheerio.load(item.description || '');
+        const imgElement = $('img');
+        const imageUrl = imgElement.attr('src');
+        
+        // Clean up the description by removing the image HTML
+        imgElement.remove();
+        const cleanDescription = $.text().trim();
+
+        // Extract tags and convert to a category
+        const tags = item.Tags?.split(',') || [];
+        const primaryTag = tags[0] || 'News';
+        
+        const article: JPostArticle = {
+          titleEn: item.title?.trim() || '',
+          contentEn: cleanDescription,
+          source: 'The Jerusalem Post',
+          category: primaryTag,
+          imageUrl: imageUrl || null,
+          sourceUrl: item.link?.trim() || '',
+        };
+
+        // Validate required fields
+        if (!article.titleEn || !article.contentEn || !article.sourceUrl) {
+          console.warn('Skipping invalid article:', { 
+            hasTitle: !!article.titleEn,
+            hasContent: !!article.contentEn,
+            hasUrl: !!article.sourceUrl
+          });
+          return null;
+        }
+
+        console.log('Successfully processed article:', {
+          title: article.titleEn.substring(0, 50) + '...',
+          link: article.sourceUrl,
+          hasImage: !!article.imageUrl,
+          category: article.category
+        });
+        
+        return article;
+      } catch (error) {
+        console.error('Error processing RSS item:', error);
+        console.debug('Problematic RSS item:', JSON.stringify(item, null, 2));
+        return null;
+      }
+    });
+
+    // Filter out null articles and take the latest 6 valid ones
+    const validArticles = articles
+      .filter((article): article is JPostArticle => article !== null)
       .slice(0, 6);
 
-    console.log(`Final article count: ${allArticles.length}`);
-    return allArticles;
+    console.log(`Successfully processed ${validArticles.length} valid articles`);
+    return validArticles;
   } catch (error) {
     console.error('Error scraping JPost:', error);
+    if (error instanceof Error) {
+      console.error('Error details:', error.message);
+      console.error('Stack trace:', error.stack);
+    }
     throw error;
   }
 }
