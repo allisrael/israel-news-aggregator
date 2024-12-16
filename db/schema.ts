@@ -10,6 +10,7 @@ export const articles = pgTable("articles", {
   source: text("source").notNull(),
   category: text("category").notNull(),
   imageUrl: text("image_url"),
+  sourceUrl: text("source_url"),
   publishedAt: timestamp("published_at").notNull().defaultNow(),
   metadata: jsonb("metadata").notNull().default({}),
 });

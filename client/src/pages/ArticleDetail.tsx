@@ -99,6 +99,16 @@ export function ArticleDetail() {
               <div>
                 <span className="font-semibold mr-2">Source:</span>
                 {article.source}
+                {article.sourceUrl && (
+                  <a
+                    href={article.sourceUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="ml-2 text-primary hover:underline"
+                  >
+                    {isHebrew ? 'צפה במקור' : 'View Original'}
+                  </a>
+                )}
               </div>
               <div>
                 <span className="font-semibold mr-2">Category:</span>

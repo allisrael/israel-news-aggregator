@@ -9,6 +9,7 @@ export type Article = {
   source: string;
   category: string;
   imageUrl: string | null;
+  sourceUrl: string | null;
   publishedAt: string;
 };
 
