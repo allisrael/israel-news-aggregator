@@ -3,10 +3,13 @@ import { useArticles, useCategories } from "@/lib/api";
 import { ArticleCard } from "@/components/ArticleCard";
 import { SearchBar } from "@/components/SearchBar";
 import { CategoryFilter } from "@/components/CategoryFilter";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { useLanguage } from "@/lib/LanguageContext";
 
 export function Home() {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<string>();
+  const { language } = useLanguage();
   
   const { data: articles, isLoading } = useArticles({ search, category });
   const { data: categories = [] } = useCategories();
@@ -15,8 +18,16 @@ export function Home() {
     <div className="min-h-screen bg-gray-50">
       <header className="bg-primary text-white py-6">
         <div className="container mx-auto px-4">
-          <h1 className="text-3xl font-bold mb-4">Israeli News Aggregator</h1>
-          <SearchBar value={search} onChange={setSearch} />
+          <div className="flex justify-between items-center mb-4">
+            <h1 className="text-3xl font-bold">
+              {language === "he" ? "מצבור חדשות ישראל" : "Israeli News Aggregator"}
+            </h1>
+            <LanguageSwitcher />
+          </div>
+          <SearchBar 
+            value={search} 
+            onChange={setSearch}
+          />
         </div>
       </header>
 
