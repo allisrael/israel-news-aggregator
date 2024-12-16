@@ -1,6 +1,7 @@
 import { Switch, Route } from "wouter";
 import { Home } from "@/pages/Home";
 import { ArticleDetail } from "@/pages/ArticleDetail";
+import { DiffbotArticles } from "@/pages/DiffbotArticles";
 import { Card, CardContent } from "@/components/ui/card";
 import { AlertCircle } from "lucide-react";
 import { LanguageProvider } from "@/lib/LanguageContext";
@@ -11,6 +12,7 @@ function App() {
       <Switch>
         <Route path="/" component={Home} />
         <Route path="/article/:id" component={ArticleDetail} />
+        <Route path="/imported-articles" component={DiffbotArticles} />
         <Route component={NotFound} />
       </Switch>
     </LanguageProvider>

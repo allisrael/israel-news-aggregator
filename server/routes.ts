@@ -140,6 +140,19 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Import article using Diffbot
+  // Get all Diffbot articles
+  app.get("/api/diffbot-articles", async (_req, res) => {
+    try {
+      const articles = await db.query.diffbotArticles.findMany({
+        orderBy: (diffbotArticles, { desc }) => [desc(diffbotArticles.createdAt)]
+      });
+      res.json(articles);
+    } catch (error) {
+      console.error('Error fetching Diffbot articles:', error);
+      res.status(500).json({ error: "Failed to fetch Diffbot articles" });
+    }
+  });
+
   app.post("/api/import/diffbot", async (req, res) => {
     try {
       const { url } = req.body;

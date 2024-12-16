@@ -6,6 +6,7 @@ import { CategoryFilter } from "@/components/CategoryFilter";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { ImportArticleForm } from "@/components/ImportArticleForm";
 import { useLanguage } from "@/lib/LanguageContext";
+import { Link } from "wouter";
 
 export function Home() {
   const [search, setSearch] = useState("");
@@ -73,8 +74,13 @@ export function Home() {
           />
         </div>
 
-        <div className="mb-8">
+        <div className="mb-8 space-y-4">
           <ImportArticleForm />
+          <div className="text-center">
+            <Link to="/imported-articles" className="text-primary hover:underline">
+              View Imported Articles
+            </Link>
+          </div>
         </div>
 
         {isLoading ? (
