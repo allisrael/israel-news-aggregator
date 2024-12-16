@@ -20,52 +20,99 @@ interface JPostArticle {
 export async function scrapeLatestJPostArticles(): Promise<JPostArticle[]> {
   try {
     console.log('Fetching articles from JPost RSS feed...');
-    const rssUrl = 'https://rss.jpost.com/rss/rssfeedsfrontpage.aspx';
+    // Try multiple RSS feed URLs in order of preference
+    const rssUrls = [
+      'https://www.jpost.com/rss/rssfeedsfrontpage.aspx',
+      'https://www.jpost.com/rss/rss.aspx?sectionid=1',
+      'https://www.jpost.com/Rss/RssFeedsHeadlines.aspx',
+      'https://www.jpost.com/rss/rssfeedsmanager.aspx',
+      // Additional backup URLs and proxies
+      'https://rss.app/feeds/rVeDbUWxLDf0Uk2M.xml',
+      'https://feed.informer.com/digests/KGPQFPNPIK/feeder',
+      'https://feedmix.novaclic.com/atom2rss.php?source=https%3A%2F%2Fwww.jpost.com%2Frss'
+    ];
     
+    let response;
+    let lastError;
+
+    for (const url of rssUrls) {
+      try {
+        console.log(`Trying feed URL: ${url}`);
+        response = await axios.get(url, {
+          timeout: 30000,
+          maxRedirects: 5,
+          responseType: 'text',
+          validateStatus: (status) => status < 500,
+          headers: {
+            'Accept': 'application/rss+xml, application/xml, text/xml, */*',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+            'Accept-Language': 'en-US,en;q=0.9,he;q=0.8',
+            'Cache-Control': 'no-cache',
+            'Connection': 'keep-alive'
+          }
+        });
+
+        if (response.status === 200) {
+          console.log(`Successfully fetched feed from ${url}`);
+          break;
+        }
+
+        console.log(`Failed to fetch from ${url}: ${response.status}`);
+        lastError = new Error(`HTTP ${response.status}`);
+      } catch (err) {
+        const error = err as Error;
+        console.log(`Error fetching from ${url}:`, error.message);
+        lastError = error;
+        continue;
+      }
+    }
+
+    if (!response || response.status !== 200) {
+      throw lastError || new Error('Failed to fetch feed from all URLs');
+    }
+
+    const xmlContent = response.data;
+    if (typeof xmlContent !== 'string' || xmlContent.length === 0) {
+      throw new Error('Invalid RSS feed response: Empty content');
+    }
+
     const parser = new XMLParser({
       ignoreAttributes: false,
       attributeNamePrefix: "@_",
       trimValues: true,
       parseTagValue: true,
-      isArray: (name) => ['item'].includes(name),
+      isArray: (name) => ['item', 'Tags', 'RelatedItemID1', 'RelatedItemID2', 'RelatedItemID3'].includes(name),
       textNodeName: "#text",
       removeNSPrefix: true,
       preserveOrder: false,
       ignoreDeclaration: true,
       parseAttributeValue: false,
+      cdataPropName: "__cdata",
       numberParseOptions: {
         hex: false,
         leadingZeros: false
+      },
+      tagValueProcessor: (tagName: string, tagValue: any) => {
+        if (typeof tagValue === 'string') {
+          return tagValue
+            .replace(/&amp;/g, '&')
+            .replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>')
+            .replace(/&quot;/g, '"')
+            .replace(/&#39;/g, "'")
+            .replace(/&#x27;/g, "'")
+            .replace(/&#x2018;/g, "'")
+            .replace(/&#x2019;/g, "'")
+            .trim();
+        }
+        return tagValue;
       }
     });
-    
-    const response = await axios.get(rssUrl, {
-      timeout: 30000,
-      maxRedirects: 5,
-      responseType: 'text',
-      validateStatus: null,
-      headers: {
-        'Accept': 'application/rss+xml, application/xml, text/xml',
-        'User-Agent': 'Mozilla/5.0 (compatible; IsraeliNewsBot/1.0)'
-      }
-    });
-
-    if (response.status !== 200) {
-      console.error('Failed to fetch RSS feed:', response.status, response.statusText);
-      throw new Error(`Failed to fetch RSS feed: HTTP ${response.status}`);
-    }
-
-    const xmlContent = response.data;
-    if (typeof xmlContent !== 'string' || xmlContent.length === 0) {
-      console.error('Invalid RSS feed response: Empty content');
-      throw new Error('Invalid RSS feed response: Empty content');
-    }
 
     console.log(`RSS Feed Content Length: ${xmlContent.length}`);
     const result = parser.parse(xmlContent);
 
     if (!result?.rss?.channel?.item) {
-      console.error('Invalid RSS feed structure:', result);
       throw new Error('Invalid RSS feed structure - missing channel or items');
     }
 
@@ -74,7 +121,6 @@ export async function scrapeLatestJPostArticles(): Promise<JPostArticle[]> {
       : [result.rss.channel.item];
 
     if (!items.length) {
-      console.error('No items found in feed');
       throw new Error('No items found in RSS feed');
     }
 
@@ -92,12 +138,16 @@ export async function scrapeLatestJPostArticles(): Promise<JPostArticle[]> {
         // Extract category from Tags or use default
         const category = item.Tags?.split(',')[0]?.trim() || 'News';
         
+        // Extract category from Tags if available
+        const category = item.Tags?.split(',')[0]?.trim() || 'News';
+        
+        // Create the article with English content as default and Hebrew translation if available
         const article: JPostArticle = {
           titleHe: item.title?.trim() || '',
-          titleEn: null, // JPost is in English by default
-          url: item.guid?.trim() || item.link?.trim() || '',
-          contentHe: cleanDescription,
-          contentEn: null,
+          titleEn: item.SocialTitle?.trim() || item.title?.trim() || '',
+          url: item.link?.trim() || '',
+          contentHe: item.title?.trim() || '', // Use title as Hebrew content for now
+          contentEn: cleanDescription || '',
           source: 'Jerusalem Post',
           category,
           imageUrl,
@@ -138,9 +188,15 @@ export async function scrapeLatestJPostArticles(): Promise<JPostArticle[]> {
 export async function importJPostArticles() {
   try {
     console.log('Starting JPost article import...');
-    const jpostArticles = await scrapeLatestJPostArticles();
+    let jpostArticles;
+    try {
+      jpostArticles = await scrapeLatestJPostArticles();
+    } catch (error) {
+      console.error('Failed to scrape JPost articles:', error);
+      throw new Error(`Failed to scrape JPost articles: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
     
-    if (jpostArticles.length === 0) {
+    if (!jpostArticles || jpostArticles.length === 0) {
       console.warn('No articles found to import from JPost');
       return 0;
     }
@@ -148,6 +204,15 @@ export async function importJPostArticles() {
     let importedCount = 0;
     for (const article of jpostArticles) {
       try {
+        if (!article.url || !article.titleHe || !article.contentHe) {
+          console.warn('Skipping invalid article:', {
+            hasUrl: !!article.url,
+            hasTitleHe: !!article.titleHe,
+            hasContentHe: !!article.contentHe
+          });
+          continue;
+        }
+
         // Check for existing article to avoid duplicates
         const existing = await db.query.articles.findFirst({
           where: eq(articles.url, article.url)
@@ -157,6 +222,13 @@ export async function importJPostArticles() {
           console.log(`Skipping duplicate article: ${article.titleHe}`);
           continue;
         }
+
+        console.log('Attempting to insert article:', {
+          title: article.titleHe.substring(0, 50),
+          url: article.url,
+          source: article.source,
+          category: article.category
+        });
 
         await db.insert(articles).values({
           titleHe: article.titleHe,
@@ -172,16 +244,25 @@ export async function importJPostArticles() {
         });
         
         importedCount++;
-        console.log(`Imported article: ${article.titleHe}`);
+        console.log(`Successfully imported article: ${article.titleHe}`);
       } catch (err) {
-        console.error(`Failed to import article "${article.titleHe}":`, err);
+        console.error('Failed to import article:', {
+          title: article.titleHe,
+          error: err instanceof Error ? err.message : 'Unknown error',
+          stack: err instanceof Error ? err.stack : undefined
+        });
       }
     }
 
-    console.log(`Successfully imported ${importedCount} articles`);
+    console.log(`Import completed. Successfully imported ${importedCount} articles`);
     return importedCount;
   } catch (error) {
-    console.error('Error importing JPost articles:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    console.error('Error importing JPost articles:', {
+      message: errorMessage,
+      stack: errorStack
+    });
     throw error;
   }
 }

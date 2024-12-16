@@ -27,7 +27,11 @@ export async function scrapeLatestTOIArticles(): Promise<TOIArticle[]> {
       'https://www.timesofisrael.com/israel-news/feed/',
       'https://blogs.timesofisrael.com/feed/',
       'https://www.timesofisrael.com/start-up-israel/feed/',
-      'https://www.timesofisrael.com/rss/'
+      'https://www.timesofisrael.com/rss/',
+      // RSS proxies and alternative formats
+      'https://rss.app/feeds/O6LJpwNyxnb3YDKJ.xml',
+      'https://feed.informer.com/digests/KGPQFPNPIK/feeder',
+      'https://feedmix.novaclic.com/atom2rss.php?source=https%3A%2F%2Fwww.timesofisrael.com%2Ffeed'
     ];
 
     // Helper function to delay between requests
@@ -60,38 +64,48 @@ export async function scrapeLatestTOIArticles(): Promise<TOIArticle[]> {
     let lastError;
 
     // Try each URL with exponential backoff
-    for (const [index, url] of feedUrls.entries()) {
+    for (let i = 0; i < feedUrls.length; i++) {
+      const url = feedUrls[i];
       try {
         // Add delay between requests with exponential backoff
-        if (index > 0) {
-          const backoffTime = Math.min(1000 * Math.pow(2, index - 1), 8000);
+        if (i > 0) {
+          const backoffTime = Math.min(1000 * Math.pow(2, i - 1), 8000);
           console.log(`Waiting ${backoffTime}ms before next attempt...`);
           await delay(backoffTime);
         }
         
         console.log(`Trying feed URL: ${url}`);
-        response = await axios.get(url, {
-          timeout: 30000,
-          maxRedirects: 5,
-          responseType: 'text',
-          validateStatus: null,
-          headers: {
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-            'Accept-Encoding': 'gzip, deflate, br',
-            'Accept-Language': 'en-US,en;q=0.9,he;q=0.8',
-            'Cache-Control': 'no-cache',
-            'Connection': 'keep-alive',
-            'DNT': '1',
-            'Pragma': 'no-cache',
-            'Referer': 'https://www.timesofisrael.com/',
-            'Sec-Fetch-Dest': 'document',
-            'Sec-Fetch-Mode': 'navigate',
-            'Sec-Fetch-Site': 'same-origin',
-            'Sec-Fetch-User': '?1',
-            'Upgrade-Insecure-Requests': '1',
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        try {
+          console.log(`Attempting to fetch RSS feed from ${url}`);
+          response = await axios.get(url, {
+            timeout: 30000,
+            maxRedirects: 5,
+            responseType: 'text',
+            validateStatus: (status) => status < 500, // Accept all status codes less than 500
+            headers: {
+              'Accept': 'application/rss+xml, application/xml, text/xml, */*',
+              'Accept-Encoding': 'gzip, deflate',
+              'Accept-Language': 'en-US,en;q=0.9,he;q=0.8',
+              'Cache-Control': 'no-cache',
+              'Connection': 'keep-alive',
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            },
+            decompress: true // Handle gzip responses
+          });
+
+          console.log(`Response status: ${response.status}, content type: ${response.headers['content-type']}`);
+        } catch (error) {
+          if (axios.isAxiosError(error)) {
+            console.error(`Axios error for ${url}:`, {
+              status: error.response?.status,
+              statusText: error.response?.statusText,
+              headers: error.response?.headers,
+              message: error.message
+            });
           }
-        });
+          throw error;
+        }
+
 
         if (response.status === 200) {
           console.log(`Successfully fetched feed from ${url}`);
@@ -100,7 +114,8 @@ export async function scrapeLatestTOIArticles(): Promise<TOIArticle[]> {
 
         console.log(`Failed to fetch from ${url}: ${response.status} ${response.statusText}`);
         lastError = new Error(`HTTP ${response.status}`);
-      } catch (error) {
+      } catch (err) {
+        const error = err as Error;
         console.log(`Error fetching from ${url}:`, error.message);
         lastError = error;
       }
