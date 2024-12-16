@@ -1,17 +1,13 @@
 import axios from 'axios';
-import * as cheerio from 'cheerio';
+import { XMLParser } from 'fast-xml-parser';
 import { db } from '@db';
 import { articles } from '@db/schema';
 import { eq } from 'drizzle-orm';
-import { XMLParser } from 'fast-xml-parser';
 
 interface JPostArticle {
-  titleEn: string;
-  contentEn: string;
-  source: string;
-  category: string;
-  imageUrl: string | null;
-  sourceUrl: string;
+  title: string;
+  url: string;
+  publishedAt: Date;
 }
 
 export async function scrapeLatestJPostArticles(): Promise<JPostArticle[]> {
@@ -22,7 +18,6 @@ export async function scrapeLatestJPostArticles(): Promise<JPostArticle[]> {
     const parser = new XMLParser({
       ignoreAttributes: false,
       attributeNamePrefix: "@_",
-      parseAttributeValue: true,
       trimValues: true,
       parseTagValue: true,
       isArray: (name) => ['item'].includes(name),
@@ -30,8 +25,7 @@ export async function scrapeLatestJPostArticles(): Promise<JPostArticle[]> {
       removeNSPrefix: true,
       preserveOrder: false,
       ignoreDeclaration: true,
-      parseAttributeValue: false,
-      cdataPropName: "#cdata"
+      parseAttributeValue: false
     });
     
     const response = await axios.get(rssUrl, {
@@ -41,7 +35,7 @@ export async function scrapeLatestJPostArticles(): Promise<JPostArticle[]> {
       validateStatus: null,
       headers: {
         'Accept': 'application/rss+xml, application/xml, text/xml',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        'User-Agent': 'Mozilla/5.0 (compatible; IsraeliNewsBot/1.0)'
       }
     });
 
@@ -57,10 +51,14 @@ export async function scrapeLatestJPostArticles(): Promise<JPostArticle[]> {
     }
 
     console.log(`RSS Feed Content Length: ${xmlContent.length}`);
-    console.log('First 200 characters:', xmlContent.substring(0, 200));
-
     const result = parser.parse(xmlContent);
-    console.log('Parsed RSS feed structure:', JSON.stringify(result, null, 2).substring(0, 1000));
+
+    // Debug the parsed structure
+    console.log('RSS Feed Structure:', JSON.stringify({
+      hasRss: !!result.rss,
+      hasChannel: !!result.rss?.channel,
+      itemCount: result.rss?.channel?.item?.length || 0
+    }));
 
     if (!result?.rss?.channel?.item) {
       console.error('Invalid RSS feed structure:', result);
@@ -80,66 +78,42 @@ export async function scrapeLatestJPostArticles(): Promise<JPostArticle[]> {
     
     const articles = items.map((item: any) => {
       try {
-        // Extract the image URL from the description HTML
-        const $ = cheerio.load(item.description || '');
-        const imgElement = $('img');
-        const imageUrl = imgElement.attr('src');
-        
-        // Clean up the description by removing the image HTML
-        imgElement.remove();
-        const cleanDescription = $.text().trim();
-
-        // Extract tags and convert to a category
-        const tags = item.Tags?.split(',') || [];
-        const primaryTag = tags[0] || 'News';
-        
         const article: JPostArticle = {
-          titleEn: item.title?.trim() || '',
-          contentEn: cleanDescription,
-          source: 'The Jerusalem Post',
-          category: primaryTag,
-          imageUrl: imageUrl || null,
-          sourceUrl: item.link?.trim() || '',
+          title: item.title?.trim() || '',
+          url: item.link?.trim() || '',
+          publishedAt: new Date(item.pubDate)
         };
 
         // Validate required fields
-        if (!article.titleEn || !article.contentEn || !article.sourceUrl) {
+        if (!article.title || !article.url) {
           console.warn('Skipping invalid article:', { 
-            hasTitle: !!article.titleEn,
-            hasContent: !!article.contentEn,
-            hasUrl: !!article.sourceUrl
+            title: article.title?.substring(0, 50),
+            hasUrl: !!article.url
           });
           return null;
         }
 
         console.log('Successfully processed article:', {
-          title: article.titleEn.substring(0, 50) + '...',
-          link: article.sourceUrl,
-          hasImage: !!article.imageUrl,
-          category: article.category
+          title: article.title.substring(0, 50) + '...',
+          url: article.url
         });
         
         return article;
       } catch (error) {
         console.error('Error processing RSS item:', error);
-        console.debug('Problematic RSS item:', JSON.stringify(item, null, 2));
         return null;
       }
     });
 
-    // Filter out null articles and take the latest 6 valid ones
+    // Filter out null articles and take the latest 10 valid ones
     const validArticles = articles
       .filter((article): article is JPostArticle => article !== null)
-      .slice(0, 6);
+      .slice(0, 10);
 
     console.log(`Successfully processed ${validArticles.length} valid articles`);
     return validArticles;
   } catch (error) {
     console.error('Error scraping JPost:', error);
-    if (error instanceof Error) {
-      console.error('Error details:', error.message);
-      console.error('Stack trace:', error.stack);
-    }
     throw error;
   }
 }
@@ -154,37 +128,29 @@ export async function importJPostArticles() {
       return 0;
     }
     
-    // Insert articles into database
     let importedCount = 0;
     for (const article of jpostArticles) {
       try {
-        // Check if article already exists to avoid duplicates
+        // Check for existing article to avoid duplicates
         const existing = await db.query.articles.findFirst({
-          where: eq(articles.sourceUrl, article.sourceUrl)
+          where: eq(articles.url, article.url)
         });
 
         if (existing) {
-          console.log(`Skipping duplicate article: ${article.titleEn}`);
+          console.log(`Skipping duplicate article: ${article.title}`);
           continue;
         }
 
         await db.insert(articles).values({
-          titleEn: article.titleEn,
-          titleHe: '',  // We'll need translation service for Hebrew
-          contentEn: article.contentEn,
-          contentHe: '',  // We'll need translation service for Hebrew
-          source: article.source,
-          category: article.category,
-          imageUrl: article.imageUrl,
-          sourceUrl: article.sourceUrl,
-          publishedAt: new Date(),
-          metadata: {},
+          title: article.title,
+          url: article.url,
+          publishedAt: article.publishedAt,
         });
         
         importedCount++;
-        console.log(`Imported article: ${article.titleEn}`);
+        console.log(`Imported article: ${article.title}`);
       } catch (err) {
-        console.error(`Failed to import article ${article.titleEn}:`, err);
+        console.error(`Failed to import article "${article.title}":`, err);
       }
     }
 
