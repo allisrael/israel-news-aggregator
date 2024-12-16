@@ -18,18 +18,44 @@ export async function scrapeLatestJPostArticles(): Promise<JPostArticle[]> {
     const baseUrl = 'https://www.jpost.com';
     console.log('Fetching articles from JPost...');
     
-    // Try to fetch the home page first
-    const response = await axios.get(baseUrl, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.5',
-        'Connection': 'keep-alive',
-        'Upgrade-Insecure-Requests': '1',
-        'Cache-Control': 'max-age=0'
-      },
-      timeout: 30000
-    });
+    const urls = [
+      `${baseUrl}/israel-news`,
+      `${baseUrl}/breaking-news`,
+      baseUrl
+    ];
+    
+    let response;
+    for (const url of urls) {
+      try {
+        console.log(`Attempting to fetch from ${url}...`);
+        response = await axios.get(url, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.9',
+            'Connection': 'keep-alive',
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+          },
+          timeout: 30000,
+          maxRedirects: 5
+        });
+        
+        if (response.status === 200) {
+          console.log(`Successfully fetched ${url}`);
+          break;
+        }
+      } catch (error) {
+        console.error(`Failed to fetch ${url}:`, error.message);
+        if (url === urls[urls.length - 1]) {
+          throw error;
+        }
+      }
+    }
+
+    if (!response || response.status !== 200) {
+      throw new Error('Failed to fetch any JPost URL');
+    }
 
     if (response.status !== 200) {
       throw new Error(`Failed to fetch JPost: HTTP ${response.status}`);
@@ -39,16 +65,16 @@ export async function scrapeLatestJPostArticles(): Promise<JPostArticle[]> {
     const $ = cheerio.load(response.data);
     const articles: JPostArticle[] = [];
 
-    // Try multiple selectors for articles
+    // Modern selectors for JPost articles
     const articleSelectors = [
-      'div.article-card',
-      'article.article',
-      '.jpost-list article',
-      '.main-container article',
-      '.top-story',
-      '.featured-article',
-      '.article-item',
-      '.breaking-news article'
+      '.article-grid-container > div',
+      '.c-articleGridGroup article',
+      '.c-articleGrid article',
+      '.c-topStories article',
+      '.c-articleCard',
+      '.breaking-news .article',
+      '[data-qa="article-card"]',
+      '[data-testid="article-item"]'
     ];
 
     for (const selector of articleSelectors) {
