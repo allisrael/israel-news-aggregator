@@ -1,0 +1,86 @@
+{
+  "request": {
+    "options": [],
+    "pageUrl": "https://allisrael.com/make-or-break-palestinian-authority-continues-fighting-terrorists-in-jenin-fearing-syria-style-rebellion",
+    "api": "article",
+    "version": 3
+  },
+  "objects": [
+    {
+      "date": "Mon, 16 Dec 2024 00:00:00 GMT",
+      "sentiment": -0.271,
+      "images": [
+        {
+          "naturalHeight": 0,
+          "diffbotUri": "image|3|2026946851",
+          "title": "A man holding a Palestinian flag gestures next to a vehicle of Palestinian security forces amid clashes with militants at the camp, in Jenin, northern Samaria, December 14, 2024. REUTERS/Raneen Sawafta",
+          "url": "https://res.cloudinary.com/hb0stl6qx/image/upload/w_900,c_scale,q_auto,f_auto,dpr_auto/v1734343967/2024-12-14T221849Z_1408396875_RC21PBAE0QDS_RTRMADP_3_PALESTINIANS-SECURITY-JENIN_h1nzbq.jpg",
+          "naturalWidth": 0,
+          "primary": true
+        },
+        {
+          "naturalHeight": 0,
+          "diffbotUri": "image|3|1985071886",
+          "url": "https://allisrael.com/assets/Screenshot-from-2020-12-09-10-20-29.png",
+          "naturalWidth": 0
+        },
+        {
+          "naturalHeight": 0,
+          "diffbotUri": "image|3|-906781995",
+          "title": "A satellite image shows Parchin rocket motor casting facility, in the aftermath of what an American researcher said was an Israeli airstrike hitting a building that was part of Iran's defunct nuclear weapons development program, near Teheran, Iran Oct 26, 2024. (Photo: Planet Labs Inc/Handout via REUTERS)",
+          "url": "https://res.cloudinary.com/hb0stl6qx/image/upload/w_300,c_scale,q_auto,f_auto,dpr_auto/v1731780614/AIN/2024-10-27T174521Z_1768674515_RC25TAANNPLU_RTRMADP_3_ISRAEL-PALESTINIANS-IRAN-IMAGERY.jpg",
+          "naturalWidth": 0
+        },
+        {
+          "naturalHeight": 0,
+          "diffbotUri": "image|3|1772084100",
+          "title": "Members of the Kurdish-led Syrian Democratic Forces (SDF) a flag in Deir al-Zor, after U.S.-backed alliance led by Syrian Kurdish fighters captured Deir el-Zor, the government's main foothold in the vast desert, according to Syrian sources, in Syria December 7, 2024. (Photo: REUTERS/Orhan Qereman)",
+          "url": "https://res.cloudinary.com/hb0stl6qx/image/upload/w_300,c_scale,q_auto,f_auto,dpr_auto/v1733765440/AIN/2024-12-07T134901Z_26860069_RC2AKBACJ8LE_RTRMADP_3_SYRIA-SECURITY.jpg",
+          "naturalWidth": 0
+        }
+      ],
+      "estimatedDate": "Mon, 16 Dec 2024 10:43:54 GMT",
+      "icon": "https://allisrael.com/assets/a-favicon-32x32.png",
+      "diffbotUri": "article|3|-195509591",
+      "siteName": "All Israel News",
+      "type": "article",
+      "title": "'Make or break': Palestinian Authority continues fighting terrorists in Jenin, fearing ‘Syria-style’ rebellion",
+      "tags": [
+        {
+          "score": 0.9745594263076782,
+          "sentiment": -0.67,
+          "count": 17,
+          "label": "Palestinian National Authority",
+          "uri": "https://diffbot.com/entity/ERL_yKVJgPOa2vr2-6M34Xw",
+          "rdfTypes": [
+            "http://dbpedia.org/ontology/Organisation"
+          ]
+        },
+        {
+          "score": 0.6297835111618042,
+          "sentiment": -0.65,
+          "count": 8,
+          "label": "Jenin",
+          "uri": "https://diffbot.com/entity/EWdrASt8PMriiSe1e_evq6A",
+          "rdfTypes": [
+            "http://dbpedia.org/ontology/Place",
+            "http://dbpedia.org/ontology/PopulatedPlace",
+            "http://dbpedia.org/ontology/Settlement",
+            "http://dbpedia.org/ontology/City"
+          ]
+        }
+      ],
+      "humanLanguage": "en",
+      "pageUrl": "https://allisrael.com/make-or-break-palestinian-authority-continues-fighting-terrorists-in-jenin-fearing-syria-style-rebellion",
+      "html": "<figure><img alt=\"\" src=\"https://res.cloudinary.com/hb0stl6qx/image/upload/w_900,c_scale,q_auto,f_auto,dpr_auto/v1734343967/2024-12-14T221849Z_1408396875_RC21PBAE0QDS_RTRMADP_3_PALESTINIANS-SECURITY-JENIN_h1nzbq.jpg\"></img><figcaption>A man holding a Palestinian flag gestures next to a vehicle of Palestinian security forces amid clashes with militants at the camp, in Jenin, northern Samaria, December 14, 2024. REUTERS/Raneen Sawafta</figcaption></figure>\n<figure><iframe src=\"https://trinitymedia.ai/player/trinity-i/2900015433/?pageURL=https%3A//allisrael.com/make-or-break-palestinian-authority-continues-fighting-terrorists-in-jenin-fearing-syria-style-rebellion&readContentType=URL\"></iframe></figure>\n<p>The Palestinian Authority&rsquo;s <a href=\"https://allisrael.com/clashes-erupt-as-palestinian-authority-forces-battle-iran-backed-militias-in-samaria\"><strong>large-scale operation</strong></a>dubbed &quot;Defend the Homeland&quot;, intended to reestablish control over the city of Jenin and its nearby refugee camp, continued on Monday, with PA security forces spokesman Gen. Anwar Rajab saying it wasn&rsquo;t clear yet how long it would continue.</p>\n<p>The PA&rsquo;s security forces had prepared for several days before escalating its operations over the weekend, so far killing a local terror commander, as well as two more gunmen, and wounding at least 20 people in street-to-street fighting in the camp&rsquo;s narrow alleyways.</p>\n<p>The UN Office of the High Commissioner for Human Rights claimed PA forces had encircled several Jenin hospitals, taking over the roofs of some of them and using them as &ldquo;a base to conduct&rdquo; operations, including &ldquo;shooting from inside the hospital.&rdquo;</p>\n<blockquote><p>اشتباكات في <a href=\"https://twitter.com/hashtag/%D8%AC%D9%86%D9%8A%D9%86?src=hash&ref_src=twsrc%5Etfw\">#جنين</a> بعد قتل أجهزة أمن السلطة الفلسطينية أحد قادة كتيبة جنين التابعة لسرايا القدس<a href=\"https://twitter.com/hashtag/%D8%AD%D8%B1%D8%A8_%D8%BA%D8%B2%D8%A9?src=hash&ref_src=twsrc%5Etfw\">#حرب_غزة</a> <a href=\"https://t.co/ZWlcS5hjm1\">pic.twitter.com/ZWlcS5hjm1</a></p>&mdash; قناة الجزيرة (@AJArabic) <a href=\"https://twitter.com/AJArabic/status/1867915097999384976?ref_src=twsrc%5Etfw\">December 14, 2024</a></blockquote>\n<p>&ldquo;This situation cannot be allowed to continue. It is unfortunate that we now need to deploy security forces to impose order,&rdquo; said Palestinian Prime Minister Mohammad Mustafa. &ldquo;But we will not watch our country destroyed and be silent.&rdquo;</p>\n<p>The operation is led by the PA&rsquo;s elite Special Operations Unit 101. According to Ynet News, the 2,000-member strong unit is trained by American and Canadian specialists. &ldquo;It&rsquo;s a source of Palestinian pride, defined by strength, courage, and respect for the population,&rdquo; a senior PA official told the newspaper.</p>\n<p>Gen. Rajab said the troops continued to arrest terrorists and neutralize explosive devices in an attempt to &ldquo;regain control of the Jenin camp from lawbreakers who ruin the lives of the citizenry.&rdquo;</p>\n<p>In an interview with Al Jazeera, Rajab explained the operation was &ldquo;aimed at lawbreakers. A campaign against those who kill children and shoot at Palestinian security forces.&rdquo;</p>\n<p>&ldquo;We will not embark on adventures or any action that will destroy the West Bank. The armed men in Jenin are not the resistance. We move in the West Bank on our own path and avoid confrontation with civilians,&rdquo; he said.</p>\n<p>&ldquo;What kind of &lsquo;resistance&rsquo; traps vehicles and blows them up among Palestinian civilians?&rdquo; he asked.</p>\n<p>Many of the terrorists active in the towns of northern Samaria, including Jenin but also other towns like Tulkarm and Nablus, are affiliated with Hamas and the Palestinian Islamic Jihad terror groups, whose representatives slammed the PA&rsquo;s operation, arguing it harmed the &ldquo;resistance&rdquo; against the Israeli &ldquo;occupation.&rdquo;</p>\n<p>Senior Hamas figure Mahmoud al-Mardawi told Al Jazeera, &ldquo;The PA&rsquo;s actions are illegal and not in line with the resistance.&rdquo; Another Hamas statement said that the operation is &ldquo;absolutely identical to Israel&rsquo;s aggression and criminality.&rdquo;</p>\n<p>&ldquo;The gunmen in Jenin are not resistance fighters, but mercenaries serving the dubious agenda of an outside party,&rdquo; charged Rajab, possibly referring to connections between the armed groups and the Iranian regime.</p>\n<p>In an indication that the operation is unpopular even among followers of the PA, its president Mahmoud Abbas threatened on Monday to immediately fire any member of the security forces who refuses to take part in the operation.</p>\n<p>According to Ynet News, the local population so far haven&rsquo;t tried to hamper the security forces&rsquo; operations. &ldquo;This shows that the residents are tired of illegal activities and want order to return to the camps,&rdquo; the PA official argued.</p>\n<p>The PA&rsquo;s security forces receive training and funding from several western countries, including the U.S., Canada and the E.U. Despite this, the U.S. urged Israel to approve urgent deliveries of military equipment to the PA to enable it to reestablish control in the areas it is supposed to hold, Axios reported.</p>\n<p>The PA&rsquo;s renewed law-enforcement push came at the urging of U.S. officials, Ynet News reported. At the same time, they asked Israel to limit its own operations in the area. &ldquo;This operation is a make or break moment for the Palestinian Authority,&rdquo; a Palestinian official told Axios.</p>\n<p>PA officials handed a list of urgently needed equipment and ammunition to U.S. security coordinator Lt.-Gen. Mike Fenzel ahead of the operation, Axios reported. Fenzel was also said to &ldquo;go over their planning&rdquo; before the operation, according to Axios.</p>\n<p>Any military assistance to the PA needs to be approved by Israel.</p>\n<p>&ldquo;This is equivalent to a major military campaign on our scale&mdash;something we haven&rsquo;t seen in years,&rdquo; a senior Israeli security source told Ynet.</p>\n<p>A Palestinian official told Axios that Abbas fears the collapse of the Assad regime in Syria could inspire local Islamists to rise up against him. &ldquo;It's a pivotal moment for the Palestinian Authority &mdash; either act like a state you say you are or go back to being a militant organization,&rdquo; the Palestinian official said.</p>\n<p>Read more: <a href=\"https://allisrael.com/tags/palestinian-authority\"> PALESTINIAN AUTHORITY | </a> <a href=\"https://allisrael.com/tags/jenin\"> JENIN | </a> <a href=\"https://allisrael.com/tags/mahmoud-abbas\"> MAHMOUD ABBAS | </a> <a href=\"https://allisrael.com/tags/palestinian-islamic-jihad\"> PALESTINIAN ISLAMIC JIHAD | </a> <a href=\"https://allisrael.com/tags/hamas\"> HAMAS | </a> <a href=\"https://allisrael.com/tags/us-israeli-relations\"> US ISRAELI RELATIONS </a></p>\n<figure><img alt=\"\" src=\"https://allisrael.com/assets/Screenshot-from-2020-12-09-10-20-29.png\"></img></figure>\n<figure><a href=\"https://allisrael.com/undeclared-iranian-nuclear-site-was-hit-by-israeli-strikes-last-month-significantly-delaying-regime-s-plans-report\"><img alt=\"\" src=\"https://res.cloudinary.com/hb0stl6qx/image/upload/w_300,c_scale,q_auto,f_auto,dpr_auto/v1731780614/AIN/2024-10-27T174521Z_1768674515_RC25TAANNPLU_RTRMADP_3_ISRAEL-PALESTINIANS-IRAN-IMAGERY.jpg\"></img></a></figure>\n<figure><a href=\"https://allisrael.com/attacks-on-the-kurds-must-stop-israels-fm-saar-calls-on-world-to-stand-with-syrian-kurds-against-turkish-attacks\"><img alt=\"\" src=\"https://res.cloudinary.com/hb0stl6qx/image/upload/w_300,c_scale,q_auto,f_auto,dpr_auto/v1733765440/AIN/2024-12-07T134901Z_26860069_RC2AKBACJ8LE_RTRMADP_3_SYRIA-SECURITY.jpg\"></img></a></figure>",
+      "categories": [
+        {
+          "score": 0.845,
+          "name": "News and Politics",
+          "id": "iabv2-379"
+        }
+      ],
+      "text": "The Palestinian Authority’s large-scale operationdubbed \"Defend the Homeland\", intended to reestablish control over the city of Jenin and its nearby refugee camp, continued on Monday, with PA security forces spokesman Gen. Anwar Rajab saying it wasn’t clear yet how long it would continue.\nThe PA’s security forces had prepared for several days before escalating its operations over the weekend, so far killing a local terror commander, as well as two more gunmen, and wounding at least 20 people in street-to-street fighting in the camp’s narrow alleyways.\nThe UN Office of the High Commissioner for Human Rights claimed PA forces had encircled several Jenin hospitals, taking over the roofs of some of them and using them as “a base to conduct” operations, including “shooting from inside the hospital.”\nاشتباكات في #جنين بعد قتل أجهزة أمن السلطة الفلسطينية أحد قادة كتيبة جنين التابعة لسرايا القدس#حرب_غزة pic.twitter.com/ZWlcS5hjm1\n— قناة الجزيرة (@AJArabic) December 14, 2024\n“This situation cannot be allowed to continue. It is unfortunate that we now need to deploy security forces to impose order,” said Palestinian Prime Minister Mohammad Mustafa. “But we will not watch our country destroyed and be silent.”\nThe operation is led by the PA’s elite Special Operations Unit 101. According to Ynet News, the 2,000-member strong unit is trained by American and Canadian specialists. “It’s a source of Palestinian pride, defined by strength, courage, and respect for the population,” a senior PA official told the newspaper.\nGen. Rajab said the troops continued to arrest terrorists and neutralize explosive devices in an attempt to “regain control of the Jenin camp from lawbreakers who ruin the lives of the citizenry.”\nIn an interview with Al Jazeera, Rajab explained the operation was “aimed at lawbreakers. A campaign against those who kill children and shoot at Palestinian security forces.”\n“We will not embark on adventures or any action that will destroy the West Bank. The armed men in Jenin are not the resistance. We move in the West Bank on our own path and avoid confrontation with civilians,” he said.\n“What kind of ‘resistance’ traps vehicles and blows them up among Palestinian civilians?” he asked.\nMany of the terrorists active in the towns of northern Samaria, including Jenin but also other towns like Tulkarm and Nablus, are affiliated with Hamas and the Palestinian Islamic Jihad terror groups, whose representatives slammed the PA’s operation, arguing it harmed the “resistance” against the Israeli “occupation.”\nSenior Hamas figure Mahmoud al-Mardawi told Al Jazeera, “The PA’s actions are illegal and not in line with the resistance.” Another Hamas statement said that the operation is “absolutely identical to Israel’s aggression and criminality.”\n“The gunmen in Jenin are not resistance fighters, but mercenaries serving the dubious agenda of an outside party,” charged Rajab, possibly referring to connections between the armed groups and the Iranian regime.\nIn an indication that the operation is unpopular even among followers of the PA, its president Mahmoud Abbas threatened on Monday to immediately fire any member of the security forces who refuses to take part in the operation.\nAccording to Ynet News, the local population so far haven’t tried to hamper the security forces’ operations. “This shows that the residents are tired of illegal activities and want order to return to the camps,” the PA official argued.\nThe PA’s security forces receive training and funding from several western countries, including the U.S., Canada and the E.U. Despite this, the U.S. urged Israel to approve urgent deliveries of military equipment to the PA to enable it to reestablish control in the areas it is supposed to hold, Axios reported.\nThe PA’s renewed law-enforcement push came at the urging of U.S. officials, Ynet News reported. At the same time, they asked Israel to limit its own operations in the area. “This operation is a make or break moment for the Palestinian Authority,” a Palestinian official told Axios.\nPA officials handed a list of urgently needed equipment and ammunition to U.S. security coordinator Lt.-Gen. Mike Fenzel ahead of the operation, Axios reported. Fenzel was also said to “go over their planning” before the operation, according to Axios.\nAny military assistance to the PA needs to be approved by Israel.\n“This is equivalent to a major military campaign on our scale—something we haven’t seen in years,” a senior Israeli security source told Ynet.\nA Palestinian official told Axios that Abbas fears the collapse of the Assad regime in Syria could inspire local Islamists to rise up against him. “It's a pivotal moment for the Palestinian Authority — either act like a state you say you are or go back to being a militant organization,” the Palestinian official said.\nRead more: PALESTINIAN AUTHORITY | JENIN | MAHMOUD ABBAS | PALESTINIAN ISLAMIC JIHAD | HAMAS | US ISRAELI RELATIONS"
+    }
+  ]
+}
