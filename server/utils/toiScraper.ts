@@ -20,7 +20,18 @@ interface TOIArticle {
 export async function scrapeLatestTOIArticles(): Promise<TOIArticle[]> {
   try {
     console.log('Fetching articles from Times of Israel RSS feed...');
-    const rssUrl = 'https://www.timesofisrael.com/feed/';
+    // Try multiple feed URL formats including mobile version
+    const feedUrls = [
+      'https://www.timesofisrael.com/feed',
+      'https://m.timesofisrael.com/feed/',
+      'https://www.timesofisrael.com/israel-news/feed/',
+      'https://blogs.timesofisrael.com/feed/',
+      'https://www.timesofisrael.com/start-up-israel/feed/',
+      'https://www.timesofisrael.com/rss/'
+    ];
+
+    // Helper function to delay between requests
+    const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
     
     const parser = new XMLParser({
       ignoreAttributes: false,
@@ -44,21 +55,59 @@ export async function scrapeLatestTOIArticles(): Promise<TOIArticle[]> {
         return tagValue;
       }
     });
-    
-    const response = await axios.get(rssUrl, {
-      timeout: 30000,
-      maxRedirects: 5,
-      responseType: 'text',
-      validateStatus: null,
-      headers: {
-        'Accept': 'application/rss+xml, application/xml, text/xml',
-        'User-Agent': 'Mozilla/5.0 (compatible; IsraeliNewsBot/1.0)'
-      }
-    });
 
-    if (response.status !== 200) {
-      console.error('Failed to fetch RSS feed:', response.status, response.statusText);
-      throw new Error(`Failed to fetch RSS feed: HTTP ${response.status}`);
+    let response;
+    let lastError;
+
+    // Try each URL with exponential backoff
+    for (const [index, url] of feedUrls.entries()) {
+      try {
+        // Add delay between requests with exponential backoff
+        if (index > 0) {
+          const backoffTime = Math.min(1000 * Math.pow(2, index - 1), 8000);
+          console.log(`Waiting ${backoffTime}ms before next attempt...`);
+          await delay(backoffTime);
+        }
+        
+        console.log(`Trying feed URL: ${url}`);
+        response = await axios.get(url, {
+          timeout: 30000,
+          maxRedirects: 5,
+          responseType: 'text',
+          validateStatus: null,
+          headers: {
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'Accept-Language': 'en-US,en;q=0.9,he;q=0.8',
+            'Cache-Control': 'no-cache',
+            'Connection': 'keep-alive',
+            'DNT': '1',
+            'Pragma': 'no-cache',
+            'Referer': 'https://www.timesofisrael.com/',
+            'Sec-Fetch-Dest': 'document',
+            'Sec-Fetch-Mode': 'navigate',
+            'Sec-Fetch-Site': 'same-origin',
+            'Sec-Fetch-User': '?1',
+            'Upgrade-Insecure-Requests': '1',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+          }
+        });
+
+        if (response.status === 200) {
+          console.log(`Successfully fetched feed from ${url}`);
+          break;
+        }
+
+        console.log(`Failed to fetch from ${url}: ${response.status} ${response.statusText}`);
+        lastError = new Error(`HTTP ${response.status}`);
+      } catch (error) {
+        console.log(`Error fetching from ${url}:`, error.message);
+        lastError = error;
+      }
+    }
+
+    if (!response || response.status !== 200) {
+      throw lastError || new Error('Failed to fetch feed from all URLs');
     }
 
     const xmlContent = response.data;

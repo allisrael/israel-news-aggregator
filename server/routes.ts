@@ -126,6 +126,18 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Import Times of Israel articles
+  app.post("/api/import/toi", async (req, res) => {
+    try {
+      const { importTOIArticles } = await import("./utils/toiScraper");
+      const count = await importTOIArticles();
+      res.json({ message: `Successfully imported ${count} articles from Times of Israel` });
+    } catch (error) {
+      console.error('Error importing Times of Israel articles:', error);
+      res.status(500).json({ error: "Failed to import articles from Times of Israel" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
