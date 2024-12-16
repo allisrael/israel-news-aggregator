@@ -156,8 +156,14 @@ export function registerRoutes(app: Express): Server {
         return res.status(409).json({ error: "Article already imported" });
       }
 
+      // Check for Diffbot API key
+      const diffbotApiKey = process.env.DIFFBOT_API_KEY;
+      if (!diffbotApiKey) {
+        return res.status(500).json({ error: "Diffbot API key not configured" });
+      }
+
       // Call Diffbot API
-      const diffbotUrl = `https://api.diffbot.com/v3/article?token=1ff7b2af2897278debfb35a54dba0f94&url=${encodeURIComponent(url)}`;
+      const diffbotUrl = `https://api.diffbot.com/v3/article?token=${diffbotApiKey}&url=${encodeURIComponent(url)}`;
       const response = await axios.get(diffbotUrl);
       const article = response.data.objects[0];
 
