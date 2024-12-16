@@ -63,24 +63,22 @@ export function ArticleCard({ article }: ArticleCardProps) {
                 <div key={i}>{paragraph}</div>
               ))}
             </div>
-            {content.split('\n').length > 3 && (
-              <div className="flex justify-between items-center mt-4">
-                <div className="text-primary font-medium">
-                  {isHebrew ? 'קרא עוד...' : 'Read more...'}
-                </div>
-                {article.sourceUrl && (
-                  <a
-                    href={article.sourceUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={(e) => e.stopPropagation()}
-                    className="text-sm text-gray-500 hover:text-primary"
-                  >
-                    {isHebrew ? 'מקור המאמר' : 'Original Article'}
-                  </a>
-                )}
+            <div className="flex justify-between items-center mt-4">
+              <div className="text-primary font-medium">
+                {isHebrew ? 'קרא עוד...' : 'Read more...'}
               </div>
-            )}
+              {article.sourceUrl && (
+                <a
+                  href={article.sourceUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  className="text-sm text-primary hover:underline"
+                >
+                  {isHebrew ? 'מקור המאמר' : 'Original Article'}
+                </a>
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>

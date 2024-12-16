@@ -98,15 +98,15 @@ export function ArticleDetail() {
             <div className="flex flex-wrap gap-4 text-sm text-gray-500">
               <div>
                 <span className="font-semibold mr-2">Source:</span>
-                {article.source}
+                <span className="mr-2">{article.source}</span>
                 {article.sourceUrl && (
                   <a
                     href={article.sourceUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="ml-2 text-primary hover:underline"
+                    className="text-primary hover:underline font-medium"
                   >
-                    {isHebrew ? 'צפה במקור' : 'View Original'}
+                    {isHebrew ? 'צפה במקור' : 'View Original Article'}
                   </a>
                 )}
               </div>
